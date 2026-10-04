@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>100 שניות – אוצר מילים באנגלית</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#172033}
+.wrap{max-width:720px;margin:0 auto;padding:18px}.top{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.stats{display:flex;gap:8px;flex-wrap:wrap}.pill{background:white;border:1px solid #d9e0ea;border-radius:999px;padding:9px 13px;font-weight:bold}
+.card{background:white;border:1px solid #d9e0ea;border-radius:20px;padding:24px;margin-top:14px;box-shadow:0 5px 20px #0000000b}
+button{width:100%;min-height:48px;border:1px solid #ccd5e2;border-radius:12px;background:#f7f9fc;padding:10px 14px;font-size:17px;font-weight:bold;cursor:pointer}
+button:hover{background:#eef3fa}.primary{background:#172033;color:white;border-color:#172033}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}.actions button{flex:1;min-width:150px}
+.start{text-align:center}.big{font-size:46px;font-weight:900}.type{color:#657086;font-weight:bold;margin-bottom:15px}
+.question{font-size:23px;font-weight:800;line-height:1.5;margin-bottom:18px}.answers{display:grid;gap:10px}
+.feedback{min-height:28px;margin-top:14px;font-weight:800;text-align:center}.share{width:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="stats">
+      <div class="pill">⏱️ <span id="time">100</span></div>
+      <div class="pill">🏆 <span id="score">0</span></div>
+      <div class="pill">📚 <span id="count">0</span></div>
+    </div>
+    <button class="share" id="share" type="button">📤 שיתוף</button>
+  </div>
+  <main class="card" id="game">
+    <div class="start">
+      <div class="big">100 שניות</div>
+      <h1>אוצר מילים באנגלית</h1>
+      <p>תרגום, השלמת משפטים וזיהוי מילה לפי הגדרה.</p>
+      <button class="primary" id="start" type="button">🎮 התחל משחק</button>
+    </div>
+  </main>
+</div>
+<script>
+const words=[
+["abandon","לנטוש","They had to ___ the building.","to leave a place or thing permanently"],
+["accurate","מדויק","Her answer was very ___.","correct and without mistakes"],
+["ancient","עתיק","The city has many ___ buildings.","very old, from a long time ago"],
+["benefit","תועלת","Exercise can ___ your health.","an advantage or something helpful"],
+["brave","אמיץ","The ___ boy helped his friend.","not afraid of danger"],
+["challenge","אתגר","The test was a real ___.","something difficult that tests your ability"],
+["discover","לגלות","Scientists hope to ___ something new.","to find something for the first time"],
+["environment","סביבה","We should protect the ___.","the natural world around you"],
+["improve","לשפר","Practice will ___ your English.","to make something better"],
+["journey","מסע","Their ___ lasted three weeks.","a trip from one place to another"],
+["ordinary","רגיל","It looked like an ___ day.","normal and not special"],
+["prevent","למנוע","Wearing a helmet can ___ injuries.","to stop something from happening"],
+["require","לדרוש","This job may ___ experience.","to need something"],
+["valuable","יקר ערך","The painting is very ___.","worth a lot or very useful"],
+["wonder","לתהות","I ___ what happened.","to think because you want to know"]
+];
+let pool=[],cur=null,score=0,time=100,count=0,timer=null,locked=false;
+const game=document.getElementById("game"),timeEl=document.getElementById("time"),scoreEl=document.getElementById("score"),countEl=document.getElementById("count");
+const shuffle=a=>[...a].sort(()=>Math.random()-.5);
+function startGame(){
+ clearInterval(timer); pool=shuffle(words);score=0;time=100;count=0;scoreEl.textContent=0;timeEl.textContent=100;countEl.textContent=0;
+ timer=setInterval(()=>{time--;timeEl.textContent=time;if(time<=0)endGame()},1000);next();
+}
+function opts(correct,index){return shuffle([correct,...shuffle(words.filter(w=>w!==cur).map(w=>w[index])).slice(0,3)])}
+function next(){
+ if(pool.length===0)pool=shuffle(words);cur=pool.pop();count++;countEl.textContent=count;locked=false;
+ const mode=Math.floor(Math.random()*3);
+ if(mode===0)render("🇬🇧 תרגום לאנגלית","מה התרגום של <b>"+cur[0]+"</b>?",opts(cur[1],1),cur[1]);
+ else if(mode===1)render("✏️ השלמת משפט",cur[2].replace("___","_____"),opts(cur[0],0),cur[0]);
+ else render("🔎 מצא את המילה לפי ההגדרה",cur[3],opts(cur[0],0),cur[0]);
+}
+function render(type,q,choices,answer){
+ game.innerHTML='<div class="type">'+type+'</div><div class="question">'+q+'</div><div class="answers" id="answers"></div><div class="feedback" id="feedback" aria-live="polite"></div>';
+ const box=document.getElementById("answers");
+ choices.forEach(c=>{const b=document.createElement("button");b.type="button";b.textContent=c;b.onclick=()=>answerQ(c,answer);box.appendChild(b)});
+}
+function answerQ(choice,answer){
+ if(locked)return;locked=true;
+ const f=document.getElementById("feedback");
+ if(choice===answer){score+=10;scoreEl.textContent=score;f.textContent="✅ נכון! +10 נקודות"}
+ else f.textContent="❌ לא נכון — התשובה: "+answer;
+ setTimeout(()=>{if(time>0)next()},650);
+}
+function endGame(){
+ clearInterval(timer);game.innerHTML='<div class="start"><div class="big">🏆 '+score+'</div><h2>הזמן נגמר!</h2><p>ענית על '+count+' שאלות.</p><div class="actions"><button class="primary" id="again">🔄 משחק חדש</button><button id="shareEnd">📤 שתף</button></div></div>';
+ document.getElementById("again").onclick=startGame;document.getElementById("shareEnd").onclick=share;
+}
+async function share(){
+ const data={title:"100 שניות – אוצר מילים באנגלית",text:"בוא לשחק איתי במשחק 100 שניות – אוצר מילים באנגלית!",url:location.href};
+ if(navigator.share){try{await navigator.share(data)}catch(e){}}
+ else{try{await navigator.clipboard.writeText(location.href);alert("הקישור למשחק הועתק!")}catch(e){alert("העתק את הקישור משורת הכתובת ושלח אותו לחברים.")}}
+}
+document.getElementById("start").onclick=startGame;document.getElementById("share").onclick=share;
+</script>
+</body>
+</html>
